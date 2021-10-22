@@ -1,0 +1,8 @@
+Find average process size.
+
+ps --no-headers -o "rss,cmd" -C php-fpm | awk '{ sum+=$1 } END { printf ("%d%s\n", sum/NR/1024,"Mb") }'
+
+Cpanel check php-fpm errors.
+
+ grep "`date +%d-%b-%Y`" /opt/cpanel/*/root/var/log/php-fpm/error.log | grep max_children | awk '{print $1, $5, $7, $8, $10}' | uniq -c | sort -nr
+     
