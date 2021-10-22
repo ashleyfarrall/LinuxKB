@@ -1,0 +1,37 @@
+Show users:
+grep "USER" /var/log/secure |awk {'print $7'} | tr "()" " " | tr "[]" " "| awk {'print $1'} | sort -n|uniq -c|sort -brg|tail -n25
+
+Show IPs:
+cat access.log | awk '{print $1}' | sort | uniq -c | sort -gr | head -n 20
+
+Show IPs with GeoIP:
+for i in `cat iplist.txt`; do echo $i && geoiplookup $i; done
+
+The first time the IP appeared in the access log:
+for i in `cat /usr/local/cpanel/logs/ips.txt`; do echo "$i <--> `cat /usr/local/cpanel/logs/access_log | grep $i | head -n1 | awk '{print $4,$5}'`";done
+
+Show IPs Plesk:
+grep "`date +%d/%b/%Y`" /var/www/vhosts/system/*/logs/access*og | awk '{print $1, $6, $7, $11}' | sort | uniq -c | sort -gr | head -n 20
+
+Check against ipdb:
+for i in $(cat iplist.txt | awk {'print $2'}|sort|uniq); do printf $i; printf ' '; curl -s https://www.abuseipdb.com/check/$i|grep -o -P '.{0,4}found'; done | grep --color 'was found'
+
+Show bots:
+cat access.log | awk -F\" '{print $6}' | sort | uniq -c | sort -n | grep bot
+
+User-agent: *
+crawl-delay: 120
+
+XMLRPC:
+
+grep xmlrpc */logs/access_* | awk '{print $1, $6, $7, $11}' | sort | uniq -c | sort -gr | head -n 20
+
+	<Files xmlrpc.php>
+	order deny,allow
+	deny from all
+	allow from 123.123.123.123
+	</Files>
+
+
+Show failed connections for mail:
+awk '/auth failed/ {for (i=1;i<=NF;i=i+1) if ($i~/rip/) print $i}' /var/log/maillog |sort|uniq -c|sort -n| tail
