@@ -1,0 +1,17 @@
+If you need to create many cpmove backups for a reseller etc.
+In the /home directory:
+Create a users.txt file for their users which is just a list like:
+user1
+user2
+user3
+...
+ 
+If you're on a WHM and need to copy all accounts, you can use this script to do it automatically: 
+ls -al /var/cpanel/users | cut -d" " -f5 > /home/users.txt
+
+
+Then create a script with:
+#! /bin/bash
+for i in `cat users.txt`; do /scripts/pkgacct $i; done
+ 
+This will read the users.txt list and then package those accounts.
