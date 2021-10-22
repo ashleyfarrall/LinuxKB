@@ -1,0 +1,15 @@
+checking SSL ciphers
+
+nmap --script ssl-enum-ciphers -p 443 hostname.com
+
+Print network IPs only
+nmap -n -sn 149.170.10.0/24 -oG - | awk '/Up$/{print $2}'
+
+- -n turns off reverse name resolution since you just want IP addresses. On a local LAN, this is probably the slowest step, too, so you get a good speed boost.
+- -sn means "Don't do a port scan." It's the same as the older, deprecated -sP with the mnemonic "ping scan."
+- -oG - sends "grepable" output to stdout, which gets piped to awk.
+- /Up$/ selects only lines which end with "Up", representing online hosts.
+- {print $2} prints the second whitespace-separated field, which is the IP address.
+
+Print hostname and IP
+nmap -sn 149.170.10.0/24 -oG - | awk '/Up$/{print $2, $3}' | sed 's/(//; s/)//'
