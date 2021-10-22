@@ -1,0 +1,98 @@
+
+```
+ /usr/sbin/mysqld --socket=/tmp/mysql2.sock --datadir=/var/lib/mysql_restore --skip-networking --pid-file=/tmp/mysql2.pid --user=mysql --skip-grant-tables
+```
+
+This will launch MySQL, and the output will be displayed on the screen.
+
+If any errors are thrown that /usr/sbin/mysqld cannot be found, use the following commands to find where the mysqld binary is located:
+
+```
+ rpm -qa | grep -qw mlocate || yum install mlocate 
+ updatedb 
+ locate -r "mysqld$"
+```
+
+The most common alternative path you will encounter is /usr/libexec/mysqld, making the above command like so:
+
+```
+ /usr/libexec/mysqld --socket=/tmp/mysql2.sock --datadir=/var/lib/mysql_restore --skip-networking --pid-file=/tmp/mysql2.pid --user=mysql --skip-grant-tables
+```
+
+If you receive any further errors, specifically with regard to read or file permisisons for the directories or files, it is likely the MySQL user does not have permissions to access the folder. See this section for information on how to make the restore folder accessible.
+
+
+3. Open a new SSH window, and test the connection
+```
+ mysql -S /tmp/mysql2.sock
+```
+
+3b. If you are doing this on a Plesk box run this instead
+
+```
+ mysql -S /tmp/mysql2.sock -uadmin -p`cat /etc/psa/.psa.shadow`
+```
+
+If you are able to get the MySQL console, the connection has succeeded. At this point it is worth printing out all of the databases loaded.
+
+```
+ mysql> SHOW DATABASES;
+```
+
+Dumping out the MySQL data to .sql
+
+
+Before dumping out any data from the databases, make sure the destination has the requisite disk space available. In these examples, I will be dumping the .sql file to /root for convenience. Never perform a mysqldump into a publicly accessible directory. It would further be considered good practice to append the date of the MySQL dump to the end of the file, so if it is left on the server by the client it is not confused with more recent SQL data.
+
+- For all data and databases
+```
+ mysqldump -S /tmp/mysql2.sock --all-databases --events --triggers --routines > /root/alldatabases_2017_05_05.sql
+```
+- To dump several but not all databases (substitute databasename1,databasename2 etc)
+```
+ mysqldump -S /tmp/mysql2.sock --databases databasename1 databasename2 --events --triggers --routines > /root/databases_2017_05_05.sql
+```
+- For a specific database only (substitute databasename)
+```
+ mysqldump -S /tmp/mysql2.sock databasename --events --triggers --routines > /root/databasename_2017_05_05.sql
+```
+- For a specific table only (substitute databasename and tablename)
+```
+ mysqldump -S /tmp/mysql2.sock databasename tablename > /root/databasename-tablename_2017_05_05.sql
+```
+
+
+
+
+Terminate the second MySQL instance
+
+
+Never leave the second instance running. It not only wastes resources on the client's machine, but will increase the tickets we receive when the client notices their server running slower than usual.
+
+
+The "nice" way
+
+```
+ mysqladmin -S /tmp/mysql2.sock shutdown
+```
+
+The "not nice" way
+
+
+Find the PID of the second instance
+
+```
+ ps auxf | grep mysql2.sock
+```
+
+This will generate an output of the running processes matching the mysql2.sock grep. Similar to the below
+
+```
+ mysql     3180  0.9  4.4 837568 83428 ?        Sl   10:23   0:00  \_ /usr/sbin/mysqld --basedir=/usr --datadir=/var/lib/mysql_restore --pid-file=/tmp/mysql2.pid --socket=/tmp/mysql2.sock
+```
+
+The second number along, as highlighted in bold above, is the PID of the process. To terminate it, simply type
+
+```
+ kill -9 3180
+```
