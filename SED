@@ -1,0 +1,11 @@
+Remove TLSv1 and TLSv1.1 from all nginx configs:
+
+sed -i 's/TLSv1 //g' /etc/nginx/conf.d/*
+sed -i 's/TLSv1.1 //g' /etc/nginx/conf.d/*
+
+Replace application with item
+sed -i 's/application/item/g'
+
+Add # to line starting with "Aquire"
+sed -e '/Acquire/ d/^#*/#/' -i /etc/apt/apt.conf
+
