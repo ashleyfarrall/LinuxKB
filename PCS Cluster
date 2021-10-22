@@ -1,0 +1,51 @@
+
+
+
+
+Adding resource;
+
+pcs resource disable g_redis 
+pcs resource group remove g_redis r_redis_redis
+pcs resource group remove g_redis r_redis_redis2
+pcs resource group remove g_redis r_redis_redis3
+pcs resource create r_redis_ip2 ocf:heartbeat:IPaddr2 ip=172.20.114.148 op monitor interval=20s
+pcs resource group add g_redis r_redis_ip2 r_redis_redis r_redis_redis2 r_redis_redis3
+
+do config
+
+pcs resource enable g_redis
+
+
+
+
+
+Moving resource order:
+
+[root@3node1 ~]# pcs status
+Cluster name: cluster1
+...
+Online: [ 3node1.example.com 3node2.example.com 3node3.example.com ]
+ 
+Full list of resources:
+ 
+ fence  (stonith:fence_xvm):    Started 3node1.example.com
+ Resource Group: new
+     vg (ocf::heartbeat:LVM):   Started 3node1.example.com
+     ip (ocf::heartbeat:IPaddr2):   Started 3node1.example.com
+     fs (ocf::heartbeat:Filesystem):    Started 3node1.example.com
+     nfs-daemon (ocf::heartbeat:nfsserver): Started 3node1.example.com
+     nfs-export (ocf::heartbeat:exportfs):  Started 3node1.example.com
+
+Examples:
+
+pcs resource group add new ip --before vg
+
+Resource Group: new
+     ip  (ocf::heartbeat:IPaddr2):    Started 3node1.example.com
+     vg   (ocf::heartbeat:LVM):   Started 3node1.example.com
+
+pcs resource group add new ip --after  nfs-export
+
+     nfs-export  (ocf::heartbeat:exportfs):   Started 3node1.example.com
+     ip   (ocf::heartbeat:IPaddr2):   Started 3node1.example.com
+
