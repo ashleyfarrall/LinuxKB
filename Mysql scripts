@@ -1,0 +1,7 @@
+
+Export all databases individually
+mysql -N -e 'show databases' | while read dbname; do mysqldump --complete-insert --routines --triggers --single-transaction "$dbname" > "$dbname".sql; done
+
+Export and compress with date
+mysql -N -e 'show databases' | while read dbname; do mysqldump --complete-insert --routines --triggers --single-transaction "$dbname" > /var/mysqlbackup/"$dbname-`/bin/date +%Y.%m.%d.%a`".sql; 
+[[ $? -eq 0 ]] && gzip "$dbname-`/bin/date +%Y.%m.%d.%a`".sql;
