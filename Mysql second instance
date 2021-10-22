@@ -1,0 +1,101 @@
+
+```
+vi /etc/my.cnf
+```
+
+```
+#
+[mysqld1]
+#server-id=10001
+socket=/tmp/mysqld1.sock
+port=23306
+user=mysql
+basedir=/usr
+pid-file=/tmp/mysqld1.pid
+datadir=/var/lib/mysql1
+#log_bin=/var/log/mysql1/mysql1-bin.log
+#skip-grant-tables
+log-error=/tmp/mysql_error.log
+#innodb_force_recovery=6
+#innodb_purge_threads=0
+```
+
+```
+check the new instance is picked up from my.cnf; 
+mysqld_multi report  
+You should see: 
+Reporting MySQL servers 
+MySQL server from group: mysqld1 is not running 
+start the new instance & check it is running 
+mysqld_multi start 1; mysqld_multi report 
+Again, you should see: 
+Reporting MySQL servers 
+MySQL server from group: mysqld1 is running
+```
+
+All being well, you can now connect to the instance using the socket file
+
+```
+mysql -S /tmp/mysqld1.sock
+
+```
+
+the -S switch will work the same for mysqldump
+
+e.g for specific tables in a database
+
+```
+mysqldump -h 127.0.0.1 -S /tmp/mysqld1.sock -u... -p... mydb t1 t2 t3 > mydb_tables.sql
+
+```
+
+you could always create a test database just to make sure it is the right instance e.g. log into the new instance, create database jamestest; log out, back into the normal database instance and do show databases;
+
+If you cannot connect to the database due to a missing username/password, then uncomment the skip-grant-tables in the my.cnf.
+
+To stop the new instance you can run;
+
+```
+mysqld_multi stop 1; mysqld_multi report
+
+```
+
+Again, you should see:
+
+```
+Reporting MySQL servers
+MySQL server from group: mysqld1 is not running
+
+```
+
+then re-edit /etc/my.cnf and remove the configuration you added, clean up data files if you are finished
+
+IF YOU DO NOT HAVE mysqld_multi available (EG recent Percona releases) you can probably start a second instance with something like the following:
+
+```
+mysqld --port=23306 --socket=/tmp/mysqld1.sock --datadir=/var/tmp/path/to/restored/var/lib/mysql
+
+```
+
+This will stay in foreground so you'll need a second SSH session to the server to access it, which you'd do with something like:
+
+```
+mysql -P 23306 -S /tmp/mysqld1.sock
+
+```
+
+Once connected, it's worth checking your datadir to confirm you are in the instance that you want to be:
+
+```
+mysql> SHOW VARIABLES LIKE 'datadir';
+
+```
+
+If your instance won't start then you can pass InnoDB force recovery modes (up to 6) as follows:
+
+```
+mysqld --port=23306 --socket=/tmp/mysqld1.sock --datadir=/var/tmp/path/to/restored/var/lib/mysql --innodb_force_recovery=1
+
+```
+
+(replacing 1 with the required mode.)
